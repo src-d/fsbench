@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -14,6 +15,7 @@ var MemoryFileNotFound = errors.New("File not found")
 //and some other use cases
 type MemoryClient struct {
 	Files map[string]*MemoryFile
+	lock  sync.Mutex
 }
 
 //NewMemoryClient returns a new MemoryClient
@@ -26,6 +28,9 @@ func NewMemoryClient() *MemoryClient {
 //Create creates a new MemoryFile, this file will remain on Files map until be
 //closed and purged
 func (c *MemoryClient) Create(filename string) (File, error) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	c.Files[filename] = &MemoryFile{
 		BaseFile: BaseFile{filename: filename},
 		Content:  bytes.NewBuffer(nil),

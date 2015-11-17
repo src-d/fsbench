@@ -2,9 +2,9 @@ package fsbench
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"path/filepath"
-	"time"
 
 	"github.com/mxk/go-flowrate/flowrate"
 	"github.com/src-d/fsbench/fs"
@@ -16,36 +16,23 @@ const (
 	FileExtension   = ".zero"
 )
 
-type Status struct {
-	Duration time.Duration // Time period covered by the statistics
-	Bytes    int64         // Total number of bytes transferred
-	Samples  int64         // Total number of samples taken
-	AvgRate  int64         // Average transfer rate (Bytes / Duration)
-	PeakRate int64         // Maximum instantaneous transfer rate
-	Files    int           // Number of files transferred
-}
-
-type Config struct {
-	Times          int
+type WorkerConfig struct {
+	Files          int
 	DirectoryDepth int
 	BlockSize      int64
 	MinFileSize    int64
 	MaxFileSize    int64
 }
 
-func (c *Config) Filesystem() fs.Client {
-	return fs.NewMemoryClient()
-}
-
 type Worker struct {
-	c     *Config
+	c     *WorkerConfig
 	fs    fs.Client
 	block []byte
 
 	Status Status
 }
 
-func NewWorker(fs fs.Client, c *Config) *Worker {
+func NewWorker(fs fs.Client, c *WorkerConfig) *Worker {
 	return &Worker{
 		c:     c,
 		fs:    fs,
@@ -54,9 +41,11 @@ func NewWorker(fs fs.Client, c *Config) *Worker {
 }
 
 func (w *Worker) Do() error {
-	for i := 0; i < w.c.Times; i++ {
+	for i := 0; i < w.c.Files; i++ {
 		if err := w.doCreate(); err != nil {
-			return nil
+			w.Status.Errors++
+			fmt.Println(err)
+			continue
 		}
 	}
 

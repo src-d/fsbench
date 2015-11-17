@@ -16,7 +16,7 @@ type WorkerSuite struct{}
 var _ = Suite(&WorkerSuite{})
 
 func (s *WorkerSuite) TestGetFilename(c *C) {
-	w := &Worker{c: &Config{
+	w := &Worker{c: &WorkerConfig{
 		DirectoryDepth: 5,
 	}}
 
@@ -30,8 +30,8 @@ func (s *WorkerSuite) TestGetFilename(c *C) {
 
 func (s *WorkerSuite) TestCreate(c *C) {
 	cli := fs.NewMemoryClient()
-	w := NewWorker(cli, &Config{
-		Times:       10,
+	w := NewWorker(cli, &WorkerConfig{
+		Files:       10,
 		BlockSize:   512,
 		MinFileSize: 1024 * 100,
 		MaxFileSize: 1024 * 100,
@@ -46,12 +46,13 @@ func (s *WorkerSuite) TestCreate(c *C) {
 
 	c.Assert(w.Status.Files, Equals, 10)
 	c.Assert(w.Status.Bytes, Equals, int64(1024*100*10))
+	c.Assert(w.Status.Errors, Equals, 0)
 }
 
 func (s *WorkerSuite) TestCreateRand(c *C) {
 	cli := fs.NewMemoryClient()
-	w := NewWorker(cli, &Config{
-		Times:       10,
+	w := NewWorker(cli, &WorkerConfig{
+		Files:       10,
 		BlockSize:   512,
 		MinFileSize: 1024 * 100,
 		MaxFileSize: 1024 * 200,
@@ -66,4 +67,5 @@ func (s *WorkerSuite) TestCreateRand(c *C) {
 	}
 
 	c.Assert(w.Status.Files, Equals, 10)
+	c.Assert(w.Status.Errors, Equals, 0)
 }

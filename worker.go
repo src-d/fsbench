@@ -1,7 +1,6 @@
 package fsbench
 
 import (
-	"bytes"
 	"fmt"
 	"math/rand"
 	"path/filepath"
@@ -13,7 +12,7 @@ import (
 const (
 	DirectoryLength = 2
 	FilenameLength  = 32
-	FileExtension   = ".zero"
+	FileExtension   = ".rand"
 )
 
 type WorkerConfig struct {
@@ -25,19 +24,14 @@ type WorkerConfig struct {
 }
 
 type Worker struct {
-	c     *WorkerConfig
-	fs    fs.Client
-	block []byte
-
+	c      *WorkerConfig
+	fs     fs.Client
+	r      *RandomReader
 	Status Status
 }
 
 func NewWorker(fs fs.Client, c *WorkerConfig) *Worker {
-	return &Worker{
-		c:     c,
-		fs:    fs,
-		block: bytes.Repeat([]byte{0}, int(c.BlockSize)),
-	}
+	return &Worker{c: c, fs: fs, r: NewRandomReader()}
 }
 
 func (w *Worker) Do() error {
@@ -62,7 +56,12 @@ func (w *Worker) doCreate() error {
 	var size int64
 	expected := w.getSize()
 	for {
-		s, err := flow.Write(w.block)
+		bytes := make([]byte, w.c.BlockSize)
+		if _, err := w.r.Read(bytes); err != nil {
+			return err
+		}
+
+		s, err := flow.Write(bytes)
 		if err != nil {
 			return err
 		}

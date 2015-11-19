@@ -26,7 +26,7 @@ func NewBenchmark(c *Config) *Benchmark {
 }
 
 func (b *Benchmark) Init() {
-	fs := fs.NewOSClient("/tmp/b/", "/tmp/b/tmp")
+	fs := fs.NewMemoryClient()
 
 	for i := 0; i < b.c.Workers; i++ {
 		c := b.getWorkerConfig()

@@ -13,7 +13,7 @@ type WriterCommand struct {
 	Filesystem     string
 	Workers        int   `short:"w" default:"4" description:"Number of workers to run concurrently."`
 	Files          int   `short:"f" default:"100" description:"Number of files to write."`
-	BlockSize      int64 `short:"b" default:"512" description:"Size of the block, the writes are done on blocks of the given size"`
+	BlockSize      int64 `short:"b" default:"4096" description:"Size of the block, the writes are done on blocks of the given size"`
 	MinFileSize    int64 `short:"s" default:"1048576" description:"Minimun size of the files to be written."`
 	MaxFileSize    int64 `short:"S" default:"1048576" description:"Maximum size of the files to be written. If the min size and max size are different, the size of the files are random numbers on the range."`
 	DirectoryDepth int   `short:"d" default:":0" description:"Number of directories to be created for each file. Avoid having large amounts of files on the same dir."`

@@ -14,8 +14,7 @@ type WriterCommand struct {
 	Workers        int   `short:"w" default:"4" description:"Number of workers to run concurrently."`
 	Files          int   `short:"f" default:"100" description:"Number of files to write."`
 	BlockSize      int64 `short:"b" default:"4096" description:"Size of the block, the writes are done on blocks of the given size"`
-	MinFileSize    int64 `short:"s" default:"1048576" description:"Minimun size of the files to be written."`
-	MaxFileSize    int64 `short:"S" default:"1048576" description:"Maximum size of the files to be written. If the min size and max size are different, the size of the files are random numbers on the range."`
+	FixedFileSize  int64 `short:"s" default:"1048576" description:"Size of the files to be written."`
 	DirectoryDepth int   `short:"d" default:":0" description:"Number of directories to be created for each file. Avoid having large amounts of files on the same dir."`
 
 	b  *fsbench.Benchmark
@@ -36,11 +35,10 @@ func (c *WriterCommand) Execute(args []string) error {
 
 func (c *WriterCommand) init() {
 	c.b = fsbench.NewBenchmark(&fsbench.Config{
-		Workers:     c.Workers,
-		Files:       c.Files,
-		BlockSize:   c.BlockSize,
-		MinFileSize: c.MinFileSize,
-		MaxFileSize: c.MaxFileSize,
+		Workers:       c.Workers,
+		Files:         c.Files,
+		BlockSize:     c.BlockSize,
+		FixedFileSize: c.FixedFileSize,
 	})
 
 	c.b.Init()

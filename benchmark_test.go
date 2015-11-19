@@ -25,11 +25,10 @@ func (s *BenchmarkSuite) TestRun(c *C) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	b := NewBenchmark(&Config{
-		Workers:     100,
-		Files:       10000,
-		BlockSize:   512,
-		MinFileSize: 1024 * 100,
-		MaxFileSize: 1024 * 100,
+		Workers:       100,
+		Files:         10000,
+		BlockSize:     512,
+		FixedFileSize: 1024 * 100,
 	})
 
 	b.Init()

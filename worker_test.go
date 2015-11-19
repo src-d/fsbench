@@ -31,10 +31,9 @@ func (s *WorkerSuite) TestGetFilename(c *C) {
 func (s *WorkerSuite) TestCreate(c *C) {
 	cli := fs.NewMemoryClient()
 	w := NewWorker(cli, &WorkerConfig{
-		Files:       10,
-		BlockSize:   512,
-		MinFileSize: 1024 * 100,
-		MaxFileSize: 1024 * 100,
+		Files:         10,
+		BlockSize:     512,
+		FixedFileSize: 1024 * 100,
 	})
 
 	c.Assert(w.Do(), IsNil)
@@ -50,22 +49,25 @@ func (s *WorkerSuite) TestCreate(c *C) {
 }
 
 func (s *WorkerSuite) TestCreateRand(c *C) {
+	numFiles := 1000
 	cli := fs.NewMemoryClient()
 	w := NewWorker(cli, &WorkerConfig{
-		Files:       10,
-		BlockSize:   512,
-		MinFileSize: 1024 * 100,
-		MaxFileSize: 1024 * 200,
+		Files:          numFiles,
+		BlockSize:      512,
+		MeanFileSize:   1024 * 150,
+		StdDevFileSize: 1024,
 	})
 
 	c.Assert(w.Do(), IsNil)
-	c.Assert(cli.Files, HasLen, 10)
+	c.Assert(cli.Files, HasLen, numFiles)
+
+	var size int
 	for fn, _ := range cli.Files {
 		s, _ := cli.Stat(fn)
-		c.Assert(s.Size() >= 1024*100, Equals, true)
-		c.Assert(s.Size() <= 1024*200, Equals, true)
+		size += int(s.Size())
 	}
 
-	c.Assert(w.Status.Files, Equals, 10)
+	c.Assert(size/numFiles/100, Equals, 1538)
+	c.Assert(w.Status.Files, Equals, numFiles)
 	c.Assert(w.Status.Errors, Equals, 0)
 }

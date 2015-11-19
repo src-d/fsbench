@@ -12,8 +12,9 @@ type Config struct {
 	Filesystem     string
 	DirectoryDepth int
 	BlockSize      int64
-	MinFileSize    int64
-	MaxFileSize    int64
+	FixedFileSize  int64
+	MeanFileSize   int64
+	StdDevFileSize float64
 }
 
 type Benchmark struct {
@@ -44,8 +45,9 @@ func (b *Benchmark) getWorkerConfig() *WorkerConfig {
 	return &WorkerConfig{
 		DirectoryDepth: b.c.DirectoryDepth,
 		BlockSize:      b.c.BlockSize,
-		MinFileSize:    b.c.MinFileSize,
-		MaxFileSize:    b.c.MaxFileSize,
+		FixedFileSize:  b.c.FixedFileSize,
+		MeanFileSize:   b.c.MeanFileSize,
+		StdDevFileSize: b.c.StdDevFileSize,
 	}
 }
 

@@ -19,8 +19,9 @@ type WorkerConfig struct {
 	Files          int
 	DirectoryDepth int
 	BlockSize      int64
-	MinFileSize    int64
-	MaxFileSize    int64
+	FixedFileSize  int64
+	MeanFileSize   int64
+	StdDevFileSize float64
 }
 
 type Worker struct {
@@ -108,12 +109,20 @@ func (w *Worker) getFilename() string {
 }
 
 func (w *Worker) getSize() int64 {
-	if w.c.MinFileSize == w.c.MaxFileSize {
-		return w.c.MinFileSize
+	if w.c.FixedFileSize != 0 {
+		return w.c.FixedFileSize
 	}
 
-	diff := (w.c.MaxFileSize - w.c.MinFileSize) / w.c.BlockSize
-	r := rand.Int63n(diff)
+	return int64(normFloat64()*w.c.StdDevFileSize + float64(w.c.MeanFileSize))
+}
 
-	return w.c.MinFileSize + (r * w.c.BlockSize)
+func normFloat64() float64 {
+	for {
+		r := rand.NormFloat64()
+		if r <= -3 || r >= 3 {
+			continue
+		}
+
+		return r
+	}
 }

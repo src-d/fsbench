@@ -1,10 +1,6 @@
 package fsbench
 
-import (
-	"crypto/rand"
-	"fmt"
-	"time"
-)
+import "crypto/rand"
 
 var (
 	RandomSampleSize int64 = 1024 * 1024 * 50 //50MB
@@ -12,14 +8,11 @@ var (
 )
 
 func init() {
-	start := time.Now()
 	randomSample = make([]byte, RandomSampleSize)
 	_, err := rand.Reader.Read(randomSample)
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println(time.Since(start))
 }
 
 type RandomReader struct {

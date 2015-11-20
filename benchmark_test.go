@@ -1,7 +1,6 @@
 package fsbench
 
 import (
-	"fmt"
 	"runtime"
 
 	. "gopkg.in/check.v1"
@@ -34,9 +33,7 @@ func (s *BenchmarkSuite) TestRun(c *C) {
 	b.Init()
 	status := b.Run()
 
-	fmt.Println(status.AvgRate, status.Duration.String())
 	c.Assert(status.Files, Equals, 10000)
 	c.Assert(status.Errors, Equals, 0)
 	c.Assert(status.Bytes, Equals, int64(1024000000))
-
 }

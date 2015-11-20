@@ -51,7 +51,7 @@ func (b *Benchmark) getWorkerConfig() *WorkerConfig {
 	}
 }
 
-func (b *Benchmark) Run() *Status {
+func (b *Benchmark) Run() *AggregatedStatus {
 	var wg sync.WaitGroup
 	for _, w := range b.w {
 		wg.Add(1)
@@ -65,8 +65,8 @@ func (b *Benchmark) Run() *Status {
 	return b.Status()
 }
 
-func (b *Benchmark) Status() *Status {
-	s := &Status{}
+func (b *Benchmark) Status() *AggregatedStatus {
+	s := NewAggregatedStatus()
 	for _, w := range b.w {
 		s.Add(&w.Status)
 	}

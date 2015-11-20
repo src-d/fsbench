@@ -2,14 +2,11 @@ package fsbench
 
 import (
 	"os"
-	"testing"
 
 	"github.com/src-d/fsbench/fs"
 
 	. "gopkg.in/check.v1"
 )
-
-func Test(t *testing.T) { TestingT(t) }
 
 type WorkerSuite struct{}
 

@@ -3,6 +3,8 @@ package fsbench
 import (
 	"math/rand"
 	"time"
+
+	"github.com/dripolles/histogram"
 )
 
 type Status struct {
@@ -15,7 +17,20 @@ type Status struct {
 	Errors   int           // Number of errors
 }
 
-func (s *Status) Add(a *Status) {
+type AggregatedStatus struct {
+	Status
+	HistogramAvgRate  *histogram.Histogram
+	HistogramDuration *histogram.Histogram
+}
+
+func NewAggregatedStatus() *AggregatedStatus {
+	return &AggregatedStatus{
+		HistogramAvgRate:  histogram.NewHistogram(),
+		HistogramDuration: histogram.NewHistogram(),
+	}
+}
+
+func (s *AggregatedStatus) Add(a *Status) {
 	s.Files += a.Files
 	s.Errors += a.Errors
 	s.Bytes += a.Bytes
@@ -26,6 +41,9 @@ func (s *Status) Add(a *Status) {
 	if a.PeakRate > s.PeakRate {
 		s.PeakRate = s.PeakRate
 	}
+
+	s.HistogramAvgRate.Add(int(a.AvgRate))
+	s.HistogramDuration.Add(int(a.Duration))
 }
 
 const (

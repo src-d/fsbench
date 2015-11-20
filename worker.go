@@ -72,7 +72,8 @@ func (w *Worker) Read() error {
 }
 
 func (w *Worker) doWrite() error {
-	file, err := w.fs.Create(w.getFilename())
+	filename := w.getFilename()
+	file, err := w.fs.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -92,8 +93,9 @@ func (w *Worker) doWrite() error {
 		}
 	}
 
-	w.filenames = append(w.filenames, file.GetFilename())
+	w.filenames = append(w.filenames, filename)
 
+	file.Close()
 	flow.Close()
 	w.WStatus.Add(NewStatus(flow.Status()))
 

@@ -1,45 +1,35 @@
 package fs
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 )
 
 //OSClient a filesystem based on OSClient
 type OSClient struct {
 	RootDir string
-	TempDir string
 }
 
 //NewOSClient returns a new OSClient
-func NewOSClient(rootDir, tempDir string) *OSClient {
-	return &OSClient{
-		RootDir: rootDir,
-		TempDir: tempDir,
-	}
+func NewOSClient(rootDir string) *OSClient {
+	return &OSClient{RootDir: rootDir}
 }
 
-//Create creates a new GlusterFSFile
+//Create creates a new OSFile
 func (c *OSClient) Create(filename string) (File, error) {
-	fullpath := path.Join(c.RootDir, filename)
-
-	f, err := ioutil.TempFile(c.TempDir, path.Ext(filename))
-	if err != nil {
-		return nil, err
-	}
-
-	return &OSFile{
-		BaseFile: BaseFile{filename: fullpath},
-		file:     f,
-	}, nil
+	flags := os.O_WRONLY | os.O_CREATE | os.O_EXCL | os.O_SYNC
+	return c.open(filename, flags)
 }
 
+//Open opens a new OSFile
 func (c *OSClient) Open(filename string) (File, error) {
-	fullpath := path.Join(c.RootDir, filename)
+	flags := os.O_RDONLY | os.O_SYNC
+	return c.open(filename, flags)
+}
 
-	f, err := os.Open(fullpath)
+func (c *OSClient) open(filename string, flags int) (File, error) {
+	fullpath := path.Join(c.RootDir, filename)
+	f, err := os.OpenFile(fullpath, flags, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -71,16 +61,7 @@ func (f *OSFile) Write(p []byte) (int, error) {
 
 func (f *OSFile) Close() error {
 	f.closed = true
-	if err := f.file.Close(); err != nil {
-		return err
-	}
 
-	dir := filepath.Dir(f.GetFilename())
-	if dir != "." {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return err
-		}
-	}
-
-	return os.Rename(f.file.Name(), f.GetFilename())
+	//f.file.Sync()
+	return f.file.Close()
 }

@@ -17,7 +17,8 @@ var (
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	parser := flags.NewParser(nil, flags.Default)
-	parser.AddCommand("writer", "", "", &WriterCommand{})
+	parser.AddCommand("memory", "", "", &MemoryCommand{})
+	parser.AddCommand("os", "", "", &OSCommand{})
 
 	if _, err := parser.Parse(); err != nil {
 		if err, ok := err.(*flags.Error); ok {

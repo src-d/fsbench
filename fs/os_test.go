@@ -8,19 +8,17 @@ import (
 )
 
 func (s *WritersSuite) TestOSClient_Create(c *C) {
-	temp := getTempDir()
 	path := getTempDir()
 
-	client := NewOSClient(path, temp)
+	client := NewOSClient(path)
 	f, _ := client.Create("foo")
-	c.Assert(f.(*OSFile).file.Name(), Not(Equals), f.GetFilename())
+	c.Assert(f.(*OSFile).file.Name(), Equals, f.GetFilename())
 }
 
 func (s *WritersSuite) TestOSClient_Write(c *C) {
-	temp := getTempDir()
 	path := getTempDir()
 
-	client := NewOSClient(path, temp)
+	client := NewOSClient(path)
 	f, _ := client.Create("foo")
 
 	l, err := f.Write([]byte("foo"))
@@ -32,20 +30,14 @@ func (s *WritersSuite) TestOSClient_Write(c *C) {
 }
 
 func (s *WritersSuite) TestOSClient_Close(c *C) {
-	temp := getTempDir()
 	path := getTempDir()
 
-	client := NewOSClient(path, temp)
+	client := NewOSClient(path)
 	f, _ := client.Create("foo")
 
 	f.Write([]byte("foo"))
 	c.Assert(f.Close(), IsNil)
 
-	//The temp file should be removed
-	_, err := ioutil.ReadFile(f.(*OSFile).file.Name())
-	c.Assert(err, Not(IsNil))
-
-	//and the final file should be there
 	wrote, _ := ioutil.ReadFile(f.GetFilename())
 	c.Assert(wrote, DeepEquals, []byte("foo"))
 }

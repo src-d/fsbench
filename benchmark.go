@@ -17,7 +17,6 @@ type Config struct {
 	Mode           WorkerMode
 	Workers        int
 	Files          int
-	Filesystem     string
 	DirectoryDepth int
 	BlockSize      int64
 	FixedFileSize  int64
@@ -26,17 +25,16 @@ type Config struct {
 }
 
 type Benchmark struct {
-	c *Config
-	w []*Worker
+	c  *Config
+	w  []*Worker
+	fs fs.Client
 }
 
-func NewBenchmark(c *Config) *Benchmark {
-	return &Benchmark{c: c}
+func NewBenchmark(fs fs.Client, c *Config) *Benchmark {
+	return &Benchmark{fs: fs, c: c}
 }
 
 func (b *Benchmark) Init() {
-	fs := fs.NewMemoryClient()
-
 	for i := 0; i < b.c.Workers; i++ {
 		c := b.getWorkerConfig()
 		c.Files = b.c.Files / b.c.Workers
@@ -45,7 +43,7 @@ func (b *Benchmark) Init() {
 			c.Files += (b.c.Files % b.c.Workers)
 		}
 
-		b.w = append(b.w, NewWorker(fs, c))
+		b.w = append(b.w, NewWorker(b.fs, c))
 	}
 }
 

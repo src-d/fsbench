@@ -3,6 +3,8 @@ package fsbench
 import (
 	"runtime"
 
+	"github.com/src-d/fsbench/fs"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -11,7 +13,8 @@ type BenchmarkSuite struct{}
 var _ = Suite(&BenchmarkSuite{})
 
 func (s *BenchmarkSuite) TestInit(c *C) {
-	b := NewBenchmark(&Config{Workers: 3, Files: 10})
+	fs := fs.NewMemoryClient()
+	b := NewBenchmark(fs, &Config{Workers: 3, Files: 10})
 	b.Init()
 
 	c.Assert(b.w, HasLen, 3)
@@ -23,7 +26,8 @@ func (s *BenchmarkSuite) TestInit(c *C) {
 func (s *BenchmarkSuite) TestRun(c *C) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	b := NewBenchmark(&Config{
+	fs := fs.NewMemoryClient()
+	b := NewBenchmark(fs, &Config{
 		Workers:       100,
 		Files:         10000,
 		BlockSize:     512,

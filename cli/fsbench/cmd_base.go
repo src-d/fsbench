@@ -7,21 +7,24 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/rakyll/pb"
 	"github.com/src-d/fsbench"
+	"github.com/src-d/fsbench/fs"
 )
 
-type WriterCommand struct {
-	Filesystem     string
+const MaxBlockSize int64 = 1024 * 1024 * 1024
+
+type BaseCommand struct {
 	Workers        int   `short:"w" default:"4" description:"Number of workers to run concurrently."`
 	Files          int   `short:"f" default:"100" description:"Number of files to write."`
-	BlockSize      int64 `short:"b" default:"4096" description:"Size of the block, the writes are done on blocks of the given size"`
+	BlockSize      int64 `short:"b" default:"0" description:"Size of the block, the writes are done on blocks of the given size (default: value of fixed file size, max. 1GB)"`
 	FixedFileSize  int64 `short:"s" default:"1048576" description:"Size of the files to be written."`
 	DirectoryDepth int   `short:"d" default:":0" description:"Number of directories to be created for each file. Avoid having large amounts of files on the same dir."`
 
 	b  *fsbench.Benchmark
 	pb *pb.ProgressBar
+	fs fs.Client
 }
 
-func (c *WriterCommand) Execute(args []string) error {
+func (c *BaseCommand) Execute(args []string) error {
 	c.init()
 	go c.updateProgressBar()
 
@@ -34,8 +37,16 @@ func (c *WriterCommand) Execute(args []string) error {
 	return nil
 }
 
-func (c *WriterCommand) init() {
-	c.b = fsbench.NewBenchmark(&fsbench.Config{
+func (c *BaseCommand) init() {
+	if c.BlockSize == 0 {
+		c.BlockSize = c.FixedFileSize
+	}
+
+	if c.BlockSize > MaxBlockSize {
+		c.BlockSize = MaxBlockSize
+	}
+
+	c.b = fsbench.NewBenchmark(c.fs, &fsbench.Config{
 		Workers:       c.Workers,
 		Files:         c.Files,
 		BlockSize:     c.BlockSize,
@@ -49,7 +60,7 @@ func (c *WriterCommand) init() {
 	c.pb.Format(" ▓▒░ ")
 }
 
-func (c *WriterCommand) updateProgressBar() {
+func (c *BaseCommand) updateProgressBar() {
 	for {
 		status := c.b.Status()
 		c.pb.Set(status.WStatus.Files)
@@ -60,7 +71,7 @@ func (c *WriterCommand) updateProgressBar() {
 	}
 }
 
-func (c *WriterCommand) printStatus(s *fsbench.AggregatedStatus) {
+func (c *BaseCommand) printStatus(s *fsbench.AggregatedStatus) {
 	secs := s.Duration.Seconds() / float64(c.Workers)
 
 	fmt.Printf(

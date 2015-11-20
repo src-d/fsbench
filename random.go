@@ -3,7 +3,7 @@ package fsbench
 import "crypto/rand"
 
 var (
-	RandomSampleSize int64 = 1024 * 1024 * 50 //50MB
+	RandomSampleSize int64 = 1024 * 1024 * 10 //10MB
 	randomSample     []byte
 )
 

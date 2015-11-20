@@ -6,7 +6,15 @@ import (
 	"github.com/src-d/fsbench/fs"
 )
 
+type WorkerMode int
+
+const (
+	WriteMode WorkerMode = 1
+	ReadMode  WorkerMode = 2
+)
+
 type Config struct {
+	Mode           WorkerMode
 	Workers        int
 	Files          int
 	Filesystem     string
@@ -51,25 +59,53 @@ func (b *Benchmark) getWorkerConfig() *WorkerConfig {
 	}
 }
 
-func (b *Benchmark) Run() *AggregatedStatus {
+func (b *Benchmark) Run() *BenchmarkStatus {
 	var wg sync.WaitGroup
 	for _, w := range b.w {
 		wg.Add(1)
 		go func(w *Worker) {
-			w.Do()
+			w.Write()
 			wg.Done()
 		}(w)
 	}
 
 	wg.Wait()
+
+	if b.c.Mode == WriteMode {
+		return b.Status()
+	}
+
+	for _, w := range b.w {
+		wg.Add(1)
+		go func(w *Worker) {
+			w.Read()
+			wg.Done()
+		}(w)
+	}
+
+	wg.Wait()
+
 	return b.Status()
 }
 
-func (b *Benchmark) Status() *AggregatedStatus {
-	s := NewAggregatedStatus()
+func (b *Benchmark) Status() *BenchmarkStatus {
+	s := NewBenchmarkStatus()
 	for _, w := range b.w {
-		s.Add(&w.Status)
+		s.RStatus.Sum(w.RStatus)
+		s.WStatus.Sum(w.WStatus)
 	}
 
 	return s
+}
+
+type BenchmarkStatus struct {
+	RStatus *AggregatedStatus
+	WStatus *AggregatedStatus
+}
+
+func NewBenchmarkStatus() *BenchmarkStatus {
+	return &BenchmarkStatus{
+		RStatus: NewAggregatedStatus(),
+		WStatus: NewAggregatedStatus(),
+	}
 }

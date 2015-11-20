@@ -33,16 +33,16 @@ func (s *WorkerSuite) TestCreate(c *C) {
 		FixedFileSize: 1024 * 100,
 	})
 
-	c.Assert(w.Do(), IsNil)
+	c.Assert(w.Write(), IsNil)
 	c.Assert(cli.Files, HasLen, 10)
 	for fn, _ := range cli.Files {
 		s, _ := cli.Stat(fn)
 		c.Assert(s.Size(), Equals, int64(1024*100))
 	}
 
-	c.Assert(w.Status.Files, Equals, 10)
-	c.Assert(w.Status.Bytes, Equals, int64(1024*100*10))
-	c.Assert(w.Status.Errors, Equals, 0)
+	c.Assert(w.WStatus.Files, Equals, 10)
+	c.Assert(w.WStatus.Bytes, Equals, int64(1024*100*10))
+	c.Assert(w.WStatus.Errors, Equals, 0)
 }
 
 func (s *WorkerSuite) TestCreateRand(c *C) {
@@ -55,7 +55,7 @@ func (s *WorkerSuite) TestCreateRand(c *C) {
 		StdDevFileSize: 1024,
 	})
 
-	c.Assert(w.Do(), IsNil)
+	c.Assert(w.Write(), IsNil)
 	c.Assert(cli.Files, HasLen, numFiles)
 
 	var size int
@@ -65,6 +65,6 @@ func (s *WorkerSuite) TestCreateRand(c *C) {
 	}
 
 	c.Assert(size/numFiles/100, Equals, 1538)
-	c.Assert(w.Status.Files, Equals, numFiles)
-	c.Assert(w.Status.Errors, Equals, 0)
+	c.Assert(w.WStatus.Files, Equals, numFiles)
+	c.Assert(w.WStatus.Errors, Equals, 0)
 }

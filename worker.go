@@ -2,6 +2,8 @@ package fsbench
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math/rand"
 	"path/filepath"
 
@@ -25,20 +27,29 @@ type WorkerConfig struct {
 }
 
 type Worker struct {
-	c      *WorkerConfig
-	fs     fs.Client
-	r      *RandomReader
-	Status Status
+	c         *WorkerConfig
+	fs        fs.Client
+	r         *RandomReader
+	filenames []string
+
+	WStatus *AggregatedStatus
+	RStatus *AggregatedStatus
 }
 
 func NewWorker(fs fs.Client, c *WorkerConfig) *Worker {
-	return &Worker{c: c, fs: fs, r: NewRandomReader()}
+	return &Worker{
+		c:       c,
+		fs:      fs,
+		r:       NewRandomReader(),
+		WStatus: NewAggregatedStatus(),
+		RStatus: NewAggregatedStatus(),
+	}
 }
 
-func (w *Worker) Do() error {
+func (w *Worker) Write() error {
 	for i := 0; i < w.c.Files; i++ {
-		if err := w.doCreate(); err != nil {
-			w.Status.Errors++
+		if err := w.doWrite(); err != nil {
+			w.WStatus.Errors++
 			fmt.Println(err)
 			continue
 		}
@@ -47,7 +58,20 @@ func (w *Worker) Do() error {
 	return nil
 }
 
-func (w *Worker) doCreate() error {
+func (w *Worker) Read() error {
+	for _, filename := range w.filenames {
+		if err := w.doRead(filename); err != nil {
+			w.RStatus.Errors++
+			fmt.Println(err)
+			continue
+		}
+
+	}
+
+	return nil
+}
+
+func (w *Worker) doWrite() error {
 	file, err := w.fs.Create(w.getFilename())
 	if err != nil {
 		return err
@@ -57,12 +81,7 @@ func (w *Worker) doCreate() error {
 	var size int64
 	expected := w.getSize()
 	for {
-		bytes := make([]byte, w.c.BlockSize)
-		if _, err := w.r.Read(bytes); err != nil {
-			return err
-		}
-
-		s, err := flow.Write(bytes)
+		s, err := copyN(flow, w.r, w.c.BlockSize)
 		if err != nil {
 			return err
 		}
@@ -73,22 +92,36 @@ func (w *Worker) doCreate() error {
 		}
 	}
 
-	flow.Close()
+	w.filenames = append(w.filenames, file.GetFilename())
 
-	w.done(flow.Status())
+	flow.Close()
+	w.WStatus.Add(NewStatus(flow.Status()))
+
 	return nil
 }
 
-func (w *Worker) done(s flowrate.Status) {
-	w.Status.Bytes += s.Bytes
-	w.Status.Duration += s.Duration
-	w.Status.Samples += s.Samples
-	w.Status.AvgRate = int64(float64(w.Status.Bytes) / w.Status.Duration.Seconds())
-	w.Status.Files++
-
-	if s.PeakRate > w.Status.PeakRate {
-		w.Status.PeakRate = s.PeakRate
+func (w *Worker) doRead(filename string) error {
+	file, err := w.fs.Open(filename)
+	if err != nil {
+		return err
 	}
+
+	flow := flowrate.NewReader(file, -1)
+	for {
+		_, err := copyN(ioutil.Discard, flow, w.c.BlockSize)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return err
+		}
+	}
+
+	flow.Close()
+	w.RStatus.Add(NewStatus(flow.Status()))
+
+	return nil
 }
 
 func (w *Worker) getFilename() string {
@@ -114,6 +147,20 @@ func (w *Worker) getSize() int64 {
 	}
 
 	return int64(normFloat64()*w.c.StdDevFileSize + float64(w.c.MeanFileSize))
+}
+
+func copyN(dst io.Writer, src io.Reader, amount int64) (int, error) {
+	bytes := make([]byte, amount)
+	if _, err := src.Read(bytes); err != nil {
+		return 0, err
+	}
+
+	s, err := dst.Write(bytes)
+	if err != nil {
+		return s, err
+	}
+
+	return s, nil
 }
 
 func normFloat64() float64 {

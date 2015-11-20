@@ -26,9 +26,10 @@ func (c *WriterCommand) Execute(args []string) error {
 	go c.updateProgressBar()
 
 	status := c.b.Run()
-	c.pb.Set(status.Files)
+	c.pb.Set(status.WStatus.Files)
 	c.pb.Finish()
-	c.printStatus(status)
+	c.printStatus(status.WStatus)
+	c.printStatus(status.RStatus)
 
 	return nil
 }
@@ -51,16 +52,15 @@ func (c *WriterCommand) init() {
 func (c *WriterCommand) updateProgressBar() {
 	for {
 		status := c.b.Status()
-		c.pb.Set(status.Files)
+		c.pb.Set(status.WStatus.Files)
 		time.Sleep(time.Millisecond)
-
-		if status.Files >= c.Files {
+		if status.WStatus.Files >= c.Files {
 			break
 		}
 	}
 }
 
-func (c *WriterCommand) printStatus(s *fsbench.Status) {
+func (c *WriterCommand) printStatus(s *fsbench.AggregatedStatus) {
 	secs := s.Duration.Seconds() / float64(c.Workers)
 
 	fmt.Printf(

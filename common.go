@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/dripolles/histogram"
+	"github.com/mxk/go-flowrate/flowrate"
 )
 
 type Status struct {
@@ -13,12 +14,22 @@ type Status struct {
 	Samples  int64         // Total number of samples taken
 	AvgRate  int64         // Average transfer rate (Bytes / Duration)
 	PeakRate int64         // Maximum instantaneous transfer rate
-	Files    int           // Number of files transferred
-	Errors   int           // Number of errors
+}
+
+func NewStatus(fs flowrate.Status) Status {
+	return Status{
+		Duration: fs.Duration,
+		Bytes:    fs.Bytes,
+		Samples:  fs.Samples,
+		AvgRate:  fs.AvgRate,
+		PeakRate: fs.PeakRate,
+	}
 }
 
 type AggregatedStatus struct {
 	Status
+	Files             int // Number of files transferred
+	Errors            int // Number of errors
 	HistogramAvgRate  *histogram.Histogram
 	HistogramDuration *histogram.Histogram
 }
@@ -30,7 +41,22 @@ func NewAggregatedStatus() *AggregatedStatus {
 	}
 }
 
-func (s *AggregatedStatus) Add(a *Status) {
+func (s *AggregatedStatus) Add(a Status) {
+	s.Files++
+	s.Bytes += a.Bytes
+	s.Duration += a.Duration
+	s.Samples += a.Samples
+	s.AvgRate = int64(float64(s.Bytes) / s.Duration.Seconds())
+
+	if a.PeakRate > s.PeakRate {
+		s.PeakRate = a.PeakRate
+	}
+
+	s.HistogramAvgRate.Add(int(a.AvgRate))
+	s.HistogramDuration.Add(int(a.Duration))
+}
+
+func (s *AggregatedStatus) Sum(a *AggregatedStatus) {
 	s.Files += a.Files
 	s.Errors += a.Errors
 	s.Bytes += a.Bytes

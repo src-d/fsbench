@@ -10,14 +10,32 @@ import (
 	"github.com/src-d/fsbench/fs"
 )
 
-const MaxBlockSize int64 = 1024 * 1024 * 1024
+const (
+	MaxBlockSize        int64  = 1024 * 1024 * 1024
+	BaseLongDescription string = `
+- Workers (-w): Number of workers to run concurrently.
+
+- Files (-f): Number of files to write.
+
+- SizeBlock (-b): The writes are made on blocks of the given size, by default
+  the value of is the value fixed file size (-s), max. size of the block is 1GB.
+
+- FixedFileSize (-s): Size of the files to be written. If this value is set all
+  the files written by the test are of the given size.
+
+- DirectoryDepth (-d): if the directory depth number is different of 0 the files
+  are written on directories, the directories are created using the first two
+  chars from the file. Example: if deep is 2 a file name "abefghif.rand" i
+  transformed on: "ab/ef/ghif.rand".
+`
+)
 
 type BaseCommand struct {
 	Workers        int   `short:"w" default:"4" description:"Number of workers to run concurrently."`
 	Files          int   `short:"f" default:"100" description:"Number of files to write."`
-	BlockSize      int64 `short:"b" default:"0" description:"Size of the block, the writes are done on blocks of the given size (default: value of fixed file size, max. 1GB)"`
+	BlockSize      int64 `short:"b" default:"0" description:"Size of the block"`
 	FixedFileSize  int64 `short:"s" default:"1048576" description:"Size of the files to be written."`
-	DirectoryDepth int   `short:"d" default:":0" description:"Number of directories to be created for each file. Avoid having large amounts of files on the same dir."`
+	DirectoryDepth int   `short:"d" default:":0" description:"Directory depth"`
 
 	b  *fsbench.Benchmark
 	pb *pb.ProgressBar

@@ -2,6 +2,11 @@ package main
 
 import "github.com/src-d/fsbench/fs"
 
+const (
+	MemoryCommandDescription     = "Memory based benchmark."
+	MemoryCommandLongDescription = MemoryCommandDescription + "\n" + BaseLongDescription
+)
+
 type MemoryCommand struct {
 	BaseCommand
 }

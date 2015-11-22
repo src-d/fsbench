@@ -8,6 +8,12 @@ import (
 	"github.com/mxk/go-flowrate/flowrate"
 )
 
+const (
+	KB = 1024
+	MB = 1024 * KB
+	GB = 1024 * MB
+)
+
 type Status struct {
 	Duration time.Duration // Time period covered by the statistics
 	Bytes    int64         // Total number of bytes transferred

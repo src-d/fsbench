@@ -30,18 +30,18 @@ func (s *WorkerSuite) TestCreate(c *C) {
 	w := NewWorker(cli, &WorkerConfig{
 		Files:         10,
 		BlockSize:     512,
-		FixedFileSize: 1024 * 100,
+		FixedFileSize: 100 * KB,
 	})
 
 	c.Assert(w.Write(), IsNil)
 	c.Assert(cli.Files, HasLen, 10)
 	for fn, _ := range cli.Files {
 		s, _ := cli.Stat(fn)
-		c.Assert(s.Size(), Equals, int64(1024*100))
+		c.Assert(s.Size(), Equals, int64(100*KB))
 	}
 
 	c.Assert(w.WStatus.Files, Equals, 10)
-	c.Assert(w.WStatus.Bytes, Equals, int64(1024*100*10))
+	c.Assert(w.WStatus.Bytes, Equals, int64(10*100*KB))
 	c.Assert(w.WStatus.Errors, Equals, 0)
 }
 
@@ -51,8 +51,8 @@ func (s *WorkerSuite) TestCreateRand(c *C) {
 	w := NewWorker(cli, &WorkerConfig{
 		Files:          numFiles,
 		BlockSize:      512,
-		MeanFileSize:   1024 * 150,
-		StdDevFileSize: 1024,
+		MeanFileSize:   150 * KB,
+		StdDevFileSize: KB,
 	})
 
 	c.Assert(w.Write(), IsNil)

@@ -7,7 +7,7 @@ type RandomSuite struct{}
 var _ = Suite(&RandomSuite{})
 
 func (s *RandomSuite) TestInit(c *C) {
-	c.Assert(randomSample, HasLen, 52428800)
+	c.Assert(randomSample, HasLen, 10*MB)
 }
 
 func (s *RandomSuite) TestRead(c *C) {

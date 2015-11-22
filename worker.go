@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/mxk/go-flowrate/flowrate"
+	"github.com/ncw/directio"
 	"github.com/src-d/fsbench/fs"
 )
 
@@ -65,7 +66,6 @@ func (w *Worker) Read() error {
 			fmt.Println(err)
 			continue
 		}
-
 	}
 
 	return nil
@@ -95,7 +95,6 @@ func (w *Worker) doWrite() error {
 
 	w.filenames = append(w.filenames, filename)
 
-	file.Close()
 	flow.Close()
 	w.WStatus.Add(NewStatus(flow.Status()))
 
@@ -152,12 +151,12 @@ func (w *Worker) getSize() int64 {
 }
 
 func copyN(dst io.Writer, src io.Reader, amount int64) (int, error) {
-	bytes := make([]byte, amount)
-	if _, err := src.Read(bytes); err != nil {
+	block := directio.AlignedBlock(int(amount))
+	if _, err := src.Read(block); err != nil {
 		return 0, err
 	}
 
-	s, err := dst.Write(bytes)
+	s, err := dst.Write(block)
 	if err != nil {
 		return s, err
 	}

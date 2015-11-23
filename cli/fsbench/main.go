@@ -17,6 +17,7 @@ var (
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	parser := flags.NewParser(nil, flags.Default)
+	parser.AddCommand("seaweed", "", "", &SeeweedFSCommand{})
 
 	parser.AddCommand(
 		"memory",

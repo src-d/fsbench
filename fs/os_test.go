@@ -10,7 +10,7 @@ import (
 func (s *WritersSuite) TestOSClient_Create(c *C) {
 	path := getTempDir()
 
-	client := NewOSClient(path)
+	client := NewOSClient(path, false)
 	f, _ := client.Create("foo")
 	c.Assert(f.(*OSFile).file.Name(), Equals, f.GetFilename())
 }
@@ -18,7 +18,7 @@ func (s *WritersSuite) TestOSClient_Create(c *C) {
 func (s *WritersSuite) TestOSClient_Write(c *C) {
 	path := getTempDir()
 
-	client := NewOSClient(path)
+	client := NewOSClient(path, false)
 	f, _ := client.Create("foo")
 
 	l, err := f.Write([]byte("foo"))
@@ -32,7 +32,7 @@ func (s *WritersSuite) TestOSClient_Write(c *C) {
 func (s *WritersSuite) TestOSClient_Close(c *C) {
 	path := getTempDir()
 
-	client := NewOSClient(path)
+	client := NewOSClient(path, false)
 	f, _ := client.Create("foo")
 
 	f.Write([]byte("foo"))

@@ -30,6 +30,12 @@ func main() {
 		&OSCommand{},
 	)
 
+	parser.AddCommand(
+		"gfapi",
+		GFAPICommandDescription, GFAPICommandLongDescription,
+		&GFAPICommand{},
+	)
+
 	if _, err := parser.Parse(); err != nil {
 		if err, ok := err.(*flags.Error); ok {
 			if err.Type == flags.ErrHelp {
